@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Team Shuffle</title>
+  <style>
+    :root {
+      --bg: #070a16;
+      --bg-2: #12182c;
+      --card: rgba(22, 28, 52, 0.72);
+      --stroke: rgba(255, 255, 255, 0.12);
+      --text: #f4f7ff;
+      --muted: #9aa3c2;
+      --pink: #ff4d8d;
+      --lime: #b6ff4d;
+      --gold: #ffd24d;
+      --cyan: #5ce1ff;
+      --violet: #9b7dff;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 12% -10%, rgba(255, 77, 141, 0.28), transparent 55%),
+        radial-gradient(900px 600px at 110% 10%, rgba(92, 225, 255, 0.2), transparent 50%),
+        radial-gradient(800px 500px at 50% 110%, rgba(182, 255, 77, 0.12), transparent 50%),
+        var(--bg);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .kicker {
+      display: inline-block;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 8vw, 76px);
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #fff 20%, #ffd24d 70%, #ff4d8d 140%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 8px 0 rgba(255, 77, 141, 0.18));
+    }
+
+    .sub {
+      margin: 12px auto 0;
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .count {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .students {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 10px;
+    }
+
+    .student {
+      appearance: none;
+      border: 2px solid transparent;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      color: var(--text);
+      border-radius: 999px;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+    }
+
+    .student:hover { transform: translateY(-2px); }
+    .student:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .student.here {
+      border-color: color-mix(in srgb, var(--accent, var(--lime)) 70%, white 0%);
+      background: color-mix(in srgb, var(--accent, var(--lime)) 18%, transparent);
+    }
+
+    .student.away {
+      opacity: 0.42;
+      border-color: rgba(255,255,255,0.08);
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+    }
+
+    .add-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .add-row input {
+      flex: 1 1 180px;
+      min-width: 0;
+      appearance: none;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .add-row input:focus {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .add-row button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      color: #101218;
+      background: var(--cyan);
+      padding: 12px 18px;
+      border-radius: 999px;
+    }
+
+    .add-row button:hover { filter: brightness(1.08); }
+
+    .roster-msg {
+      display: none;
+      margin: 10px 0 0;
+      color: #ff8fab;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .stepper button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .stepper button:hover { background: rgba(255,255,255,0.06); }
+
+    #minSize {
+      width: 48px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .go {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #101218;
+      background: linear-gradient(180deg, #ffe36a, #ffb347 55%, #ff4d8d);
+      padding: 16px 28px;
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 4px rgba(255, 210, 77, 0.15),
+        0 12px 0 #9a1d4d,
+        0 22px 40px rgba(255, 77, 141, 0.35);
+      transition: transform 0.12s ease;
+    }
+
+    .go:hover { transform: translateY(-2px); }
+    .go:active { transform: translateY(6px); box-shadow: 0 0 0 4px rgba(255, 210, 77, 0.15), 0 6px 0 #9a1d4d; }
+    .go:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      color: #ff8fab;
+      font-weight: 700;
+    }
+
+    .results {
+      min-height: 120px;
+    }
+
+    .teams {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .team {
+      border-radius: 24px;
+      padding: 16px;
+      background: rgba(8, 10, 22, 0.65);
+      border: 1px solid var(--stroke);
+      transform: translateY(18px);
+      opacity: 0;
+      animation: popIn 0.45s cubic-bezier(.2,1.4,.3,1) forwards;
+    }
+
+    .team h3 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--team, var(--cyan));
+    }
+
+    .member {
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .member.waiting {
+      color: transparent;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .member.waiting .dot { opacity: 0; }
+
+    .member:last-child { margin-bottom: 0; }
+
+    .arena {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      pointer-events: none;
+    }
+
+    .arena.active { display: block; }
+
+    .arena-chip {
+      position: absolute;
+      padding: 11px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 2px solid rgba(255,255,255,0.45);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 22px rgba(255,255,255,0.25);
+      will-change: transform, left, top;
+    }
+
+    .flash {
+      position: fixed;
+      inset: 0;
+      z-index: 19;
+      display: none;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255,210,77,0.16), transparent 36%),
+        rgba(7, 10, 22, 0.86);
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .flash.active { display: block; pointer-events: auto; }
+    .flash.lock { animation: whiteFlash 0.35s ease; }
+    .flash.reveal {
+      background: rgba(7, 10, 22, 0.28);
+    }
+    .flash.reveal .vortex,
+    .flash.reveal .flash-copy {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .vortex {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      width: min(520px, 78vw);
+      height: min(520px, 78vw);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #ff4d8d, #ffd24d, #5ce1ff, #b6ff4d, #9b7dff, #ff4d8d);
+      filter: blur(0.4px);
+      opacity: 0.55;
+      animation: spin 0.7s linear infinite;
+      -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%, #000 68%, transparent 70%);
+      mask: radial-gradient(circle, transparent 58%, #000 59%, #000 68%, transparent 70%);
+    }
+
+    .flash-copy {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 7vh;
+      text-align: center;
+      font-size: clamp(28px, 6vw, 64px);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      animation: pulse 0.35s ease-in-out infinite alternate;
+    }
+
+    #confetti {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    @keyframes popIn {
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); filter: drop-shadow(0 0 12px rgba(255,210,77,.4)); }
+      to { transform: scale(1.06); filter: drop-shadow(0 0 28px rgba(255,77,141,.6)); }
+    }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes whiteFlash {
+      0% { background: #fff; }
+      100% {
+        background:
+          radial-gradient(circle at 50% 48%, rgba(255,210,77,0.16), transparent 36%),
+          rgba(7, 10, 22, 0.86);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .controls { align-items: stretch; flex-direction: column; }
+      .go { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker">Classroom mixer</div>
+      <h1>Team Shuffle</h1>
+      <p class="sub">Mark who’s out, pick a minimum group size, then hit the giant button and watch the teams lock in.</p>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Who’s here today?</h2>
+        <span class="count"><span id="hereCount">0</span> here</span>
+      </div>
+      <p class="hint">Tap a name to mark them absent. Everyone starts as here. Add someone extra if they show up.</p>
+      <div class="students" id="students"></div>
+      <form class="add-row" id="addForm">
+        <input id="newStudent" type="text" maxlength="40" autocomplete="off" placeholder="Add a student…" aria-label="New student name" />
+        <button type="submit">Add student</button>
+      </form>
+      <p class="roster-msg" id="rosterMsg"></p>
+    </section>
+
+    <section class="panel">
+      <div class="controls">
+        <div>
+          <h2>Minimum people in a group</h2>
+          <p class="hint">Leftover students get folded into slightly larger groups.</p>
+        </div>
+        <div class="size-control">
+          <div class="stepper">
+            <button type="button" id="minus" aria-label="Decrease minimum">−</button>
+            <div id="minSize">2</div>
+            <button type="button" id="plus" aria-label="Increase minimum">+</button>
+          </div>
+          <button class="go" id="shuffle" type="button">Shuffle teams</button>
+        </div>
+      </div>
+      <div class="error" id="error"></div>
+    </section>
+
+    <section class="panel results">
+      <div class="panel-head">
+        <h2>Today’s teams</h2>
+        <p class="hint" id="resultHint">Ready when you are.</p>
+      </div>
+      <div class="teams" id="teams"></div>
+    </section>
+  </div>
+
+  <div class="flash" id="flash">
+    <div class="vortex"></div>
+    <div class="flash-copy" id="flashCopy">Mixing it up</div>
+  </div>
+  <div class="arena" id="arena"></div>
+  <canvas id="confetti"></canvas>
+
+  <script>
+    let students = [
+      "Adrian", "Braden", "Calvin", "Caper", "Cassidy", "Eloise",
+      "Isaac", "L", "Leila", "Lena", "Lincoln", "Nicholas",
+      "Norah", "Quincy", "Sawyer", "Violet", "Vivian"
+    ];
+
+    const PALETTE = [
+      "#ff4d8d", "#b6ff4d", "#5ce1ff", "#ffd24d", "#9b7dff",
+      "#ff8a4d", "#4dffc2", "#ff6ad5", "#7ad0ff", "#ff5c5c",
+      "#d0ff4d", "#c9a7ff", "#ffe08a", "#67f0a6", "#ff9ec8",
+      "#8ad8ff", "#f3ff6a"
+    ];
+
+    const TEAM_COLORS = ["#5ce1ff", "#ffd24d", "#ff4d8d", "#b6ff4d", "#9b7dff", "#ff8a4d", "#4dffc2", "#ff6ad5"];
+
+    const present = Object.fromEntries(students.map((name) => [name, true]));
+    let minSize = 2;
+
+    const studentsEl = document.getElementById("students");
+    const hereCountEl = document.getElementById("hereCount");
+    const minSizeEl = document.getElementById("minSize");
+    const shuffleBtn = document.getElementById("shuffle");
+    const errorEl = document.getElementById("error");
+    const rosterMsgEl = document.getElementById("rosterMsg");
+    const newStudentEl = document.getElementById("newStudent");
+    const teamsEl = document.getElementById("teams");
+    const resultHint = document.getElementById("resultHint");
+    const arena = document.getElementById("arena");
+    const flash = document.getElementById("flash");
+    const flashCopy = document.getElementById("flashCopy");
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function colorFor(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i += 1) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return PALETTE[Math.abs(hash) % PALETTE.length];
+    }
+
+    function showRosterMsg(message) {
+      rosterMsgEl.style.display = message ? "block" : "none";
+      rosterMsgEl.textContent = message;
+    }
+
+    function renderStudents() {
+      studentsEl.innerHTML = students.map((name) => {
+        const here = present[name];
+        const color = colorFor(name);
+        return `
+          <button type="button" class="student ${here ? "here" : "away"}" data-name="${encodeURIComponent(name)}" aria-pressed="${here}" style="--accent:${color}">
+            <span class="dot" style="background:${color}; color:${color}"></span>
+            ${escapeHtml(name)}
+          </button>
+        `;
+      }).join("");
+      const hereCount = students.filter((name) => present[name]).length;
+      hereCountEl.textContent = hereCount;
+      shuffleBtn.disabled = hereCount < minSize;
+    }
+
+    function addStudent(rawName) {
+      const name = rawName.replace(/\s+/g, " ").trim();
+      if (!name) {
+        showRosterMsg("Type a name first.");
+        return false;
+      }
+      const exists = students.some((student) => student.localeCompare(name, undefined, { sensitivity: "accent" }) === 0);
+      if (exists) {
+        showRosterMsg(`${name} is already on the list.`);
+        return false;
+      }
+      students.push(name);
+      students.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+      present[name] = true;
+      showRosterMsg("");
+      renderStudents();
+      return true;
+    }
+
+    studentsEl.addEventListener("click", (event) => {
+      const btn = event.target.closest(".student");
+      if (!btn) return;
+      const name = decodeURIComponent(btn.dataset.name);
+      present[name] = !present[name];
+      renderStudents();
+    });
+
+    document.getElementById("addForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (addStudent(newStudentEl.value)) {
+        newStudentEl.value = "";
+        newStudentEl.focus();
+      }
+    });
+
+    document.getElementById("minus").addEventListener("click", () => {
+      minSize = Math.max(2, minSize - 1);
+      minSizeEl.textContent = minSize;
+      renderStudents();
+    });
+
+    document.getElementById("plus").addEventListener("click", () => {
+      minSize = Math.min(8, minSize + 1);
+      minSizeEl.textContent = minSize;
+      renderStudents();
+    });
+
+    function presentStudents() {
+      return students.filter((name) => present[name]);
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function partition(names, size) {
+      const n = names.length;
+      const groupCount = Math.floor(n / size);
+      const shuffled = shuffle(names);
+      const groups = Array.from({ length: groupCount }, () => []);
+      shuffled.forEach((name, index) => {
+        groups[index % groupCount].push(name);
+      });
+      return groups;
+    }
+
+    function scoreGroups(groups) {
+      let score = 0;
+      // Hidden constraints: avoid Isaac+Lincoln, and avoid clustering
+      // Vivian/Eloise/Violet/Lincoln. Lower is better; 0 is a clean draw.
+      const cluster = new Set(["Vivian", "Eloise", "Violet", "Lincoln"]);
+      for (const group of groups) {
+        const set = new Set(group);
+        if (set.has("Isaac") && set.has("Lincoln")) score += 100;
+        const together = group.filter((name) => cluster.has(name)).length;
+        if (together >= 2) score += together * together * 25;
+      }
+      return score;
+    }
+
+    function assignTeams(names, size) {
+      let best = partition(names, size);
+      let bestScore = scoreGroups(best);
+      for (let i = 0; i < 900 && bestScore > 0; i++) {
+        const candidate = partition(names, size);
+        const score = scoreGroups(candidate);
+        if (score < bestScore) {
+          best = candidate;
+          bestScore = score;
+        }
+      }
+      return best;
+    }
+
+    function showError(message) {
+      errorEl.style.display = message ? "block" : "none";
+      errorEl.textContent = message;
+    }
+
+    function teamCard(group, index) {
+      const color = TEAM_COLORS[index % TEAM_COLORS.length];
+      return `
+        <article class="team" style="--team:${color}; animation-delay:${index * 70}ms">
+          <h3>Team ${index + 1}</h3>
+          ${group.map((name) => `
+            <div class="member waiting" data-name="${encodeURIComponent(name)}">
+              <span class="dot" style="background:${colorFor(name)}; color:${colorFor(name)}"></span>
+              ${escapeHtml(name)}
+            </div>
+          `).join("")}
+        </article>
+      `;
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let confettiBits = [];
+    function burstConfetti() {
+      const colors = PALETTE;
+      for (let i = 0; i < 180; i++) {
+        confettiBits.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.38,
+          vx: (Math.random() - 0.5) * 18,
+          vy: Math.random() * -14 - 4,
+          w: 6 + Math.random() * 8,
+          h: 10 + Math.random() * 10,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.4,
+          color: colors[i % colors.length],
+          life: 1
+        });
+      }
+    }
+
+    function tickConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiBits = confettiBits.filter((bit) => bit.life > 0 && bit.y < canvas.height + 40);
+      for (const bit of confettiBits) {
+        bit.vy += 0.28;
+        bit.x += bit.vx;
+        bit.y += bit.vy;
+        bit.rot += bit.vr;
+        bit.life -= 0.006;
+        ctx.save();
+        ctx.translate(bit.x, bit.y);
+        ctx.rotate(bit.rot);
+        ctx.globalAlpha = Math.max(bit.life, 0);
+        ctx.fillStyle = bit.color;
+        ctx.fillRect(-bit.w / 2, -bit.h / 2, bit.w, bit.h);
+        ctx.restore();
+      }
+      requestAnimationFrame(tickConfetti);
+    }
+    tickConfetti();
+
+    function beep(freq, duration, type = "square", gain = 0.04) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!beep.ctx) beep.ctx = new AudioCtx();
+      const osc = beep.ctx.createOscillator();
+      const g = beep.ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.value = gain;
+      osc.connect(g);
+      g.connect(beep.ctx.destination);
+      osc.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, beep.ctx.currentTime + duration);
+      osc.stop(beep.ctx.currentTime + duration);
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function animateShuffle(names, groups) {
+      flash.classList.add("active");
+      arena.classList.add("active");
+      flashCopy.textContent = "Mixing it up";
+      arena.innerHTML = "";
+      teamsEl.innerHTML = groups.map(teamCard).join("");
+      document.getElementById("teams").scrollIntoView({ behavior: "smooth", block: "center" });
+
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight * 0.48;
+      const chips = names.map((name, i) => {
+        const el = document.createElement("div");
+        el.className = "arena-chip";
+        el.textContent = name;
+        el.style.background = colorFor(name);
+        el.style.color = "#101218";
+        arena.appendChild(el);
+        return {
+          el,
+          name,
+          angle: (i / names.length) * Math.PI * 2,
+          radius: 90 + (i % 4) * 34,
+          spin: 0.1 + Math.random() * 0.1
+        };
+      });
+
+      const start = performance.now();
+      const mixMs = 2200;
+      await new Promise((resolve) => {
+        function frame(now) {
+          const t = now - start;
+          const speed = 1.35 + Math.sin(t / 160) * 0.55;
+          chips.forEach((chip) => {
+            chip.angle += chip.spin * speed;
+            const inward = Math.max(0, 1 - t / mixMs) * 40;
+            const wobble = 22 * Math.sin(t / 80 + chip.angle);
+            const x = cx + Math.cos(chip.angle) * (chip.radius + wobble - inward);
+            const y = cy + Math.sin(chip.angle) * (chip.radius * 0.58 + wobble * 0.28 - inward * 0.4);
+            chip.el.style.left = `${x}px`;
+            chip.el.style.top = `${y}px`;
+            chip.el.style.transform = `translate(-50%, -50%) rotate(${Math.sin(chip.angle) * 18}deg) scale(${1.05 + Math.sin(t / 60 + chip.angle) * 0.12})`;
+          });
+          if (t < mixMs) {
+            if (Math.floor(t / 110) !== Math.floor((t - 16) / 110)) beep(240 + Math.random() * 520, 0.04, "square", 0.03);
+            requestAnimationFrame(frame);
+          } else {
+            resolve();
+          }
+        }
+        requestAnimationFrame(frame);
+      });
+
+      flashCopy.textContent = "Locking in";
+      flash.classList.add("lock", "reveal");
+      beep(520, 0.12, "triangle", 0.06);
+      await wait(180);
+      beep(740, 0.2, "triangle", 0.07);
+      burstConfetti();
+
+      const memberEls = [...teamsEl.querySelectorAll(".member")];
+      chips.forEach((chip, i) => {
+        const target = memberEls.find((el) => decodeURIComponent(el.dataset.name) === chip.name);
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
+        chip.el.style.transition = `left 0.6s cubic-bezier(.15,.9,.25,1) ${i * 28}ms, top 0.6s cubic-bezier(.15,.9,.25,1) ${i * 28}ms, transform 0.6s ease ${i * 28}ms, opacity 0.25s ease ${420 + i * 28}ms`;
+        chip.el.style.left = `${rect.left + rect.width / 2}px`;
+        chip.el.style.top = `${rect.top + rect.height / 2}px`;
+        chip.el.style.transform = "translate(-50%, -50%) rotate(0deg) scale(0.92)";
+        chip.el.style.opacity = "0";
+        setTimeout(() => target.classList.remove("waiting"), 420 + i * 28);
+      });
+
+      await wait(820 + names.length * 28);
+      flash.classList.remove("active", "lock", "reveal");
+      arena.classList.remove("active");
+      arena.innerHTML = "";
+    }
+
+    shuffleBtn.addEventListener("click", async () => {
+      const names = presentStudents();
+      if (names.length < minSize) {
+        showError(`Need at least ${minSize} students here to make groups.`);
+        return;
+      }
+      showError("");
+      shuffleBtn.disabled = true;
+      resultHint.textContent = "Shuffling…";
+      if (beep.ctx && beep.ctx.state === "suspended") beep.ctx.resume();
+      beep(180, 0.08);
+      try {
+        const groups = assignTeams(names, minSize);
+        await animateShuffle(names, groups);
+        resultHint.textContent = `${groups.length} team${groups.length === 1 ? "" : "s"} from ${names.length} students.`;
+      } finally {
+        shuffleBtn.disabled = presentStudents().length < minSize;
+      }
+    });
+
+    renderStudents();
+  </script>
+</body>
+</html>
