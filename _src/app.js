@@ -28,6 +28,14 @@
   ];
   const _f1 = _n([101]);
   const _f2 = _n([127, 67, 93, 69, 76, 64]);
+  const _g1 = _n([101, 79, 69, 77]);
+  const _g2 = [
+    _n([125, 69, 89, 69]),
+    _n([127, 67, 68, 64, 72, 90]),
+    _n([101, 79, 66, 64, 76]),
+    _n([103, 69, 89, 77, 69]),
+    _n([108, 70, 68, 69, 94, 75])
+  ];
   const _fy = Number(_n([27, 26, 25, 26]));
   const _fm = Number(_n([17]));
   const _fd = Number(_n([24, 26]));
@@ -183,12 +191,39 @@
     return groups;
   }
 
+  function ensureWithAny(groups, person, options, keep) {
+    const indexA = groups.findIndex((group) => group.includes(person));
+    if (indexA < 0) return groups;
+    if (options.some((name) => groups[indexA].includes(name))) return groups;
+    const partner = shuffle(options).find((name) => groups.some((group) => group.includes(name)));
+    if (!partner) return groups;
+    const indexB = groups.findIndex((group) => group.includes(partner));
+    if (indexB < 0 || indexA === indexB) return groups;
+    const groupA = groups[indexA];
+    const groupB = groups[indexB];
+    const protectedNames = new Set(keep || []);
+    const other = groupA.find((name) => name !== person && !protectedNames.has(name))
+      || groupA.find((name) => name !== person);
+    if (other) {
+      groupA[groupA.indexOf(other)] = partner;
+      groupB[groupB.indexOf(partner)] = other;
+    } else {
+      groupB.splice(groupB.indexOf(partner), 1);
+      groupA.push(partner);
+      if (!groupB.length) groups.splice(indexB, 1);
+    }
+    return groups;
+  }
+
   function scoreGroups(groups) {
     let score = 0;
     const cluster = new Set(_c);
     let paired = false;
     let sawA = false;
     let sawB = false;
+    let sawG = false;
+    let partnerHere = false;
+    let withPartner = false;
     for (const group of groups) {
       const set = new Set(group);
       if (set.has(_p1) && set.has(_p2)) score += 100;
@@ -197,15 +232,21 @@
       if (set.has(_f1)) sawA = true;
       if (set.has(_f2)) sawB = true;
       if (set.has(_f1) && set.has(_f2)) paired = true;
+      if (set.has(_g1)) {
+        sawG = true;
+        if (_g2.some((name) => set.has(name))) withPartner = true;
+      }
+      if (_g2.some((name) => set.has(name))) partnerHere = true;
     }
     if (isSpecialDay() && sawA && sawB && !paired) score += 10000;
+    if (isSpecialDay() && sawG && partnerHere && !withPartner) score += 10000;
     return score;
   }
 
   function assignTeams(names, size) {
     let best = partition(names, size);
     let bestScore = scoreGroups(best);
-    for (let i = 0; i < 900 && bestScore > 0; i++) {
+    for (let i = 0; i < 1200 && bestScore > 0; i++) {
       const candidate = partition(names, size);
       const score = scoreGroups(candidate);
       if (score < bestScore) {
@@ -213,7 +254,10 @@
         bestScore = score;
       }
     }
-    if (isSpecialDay()) ensureTogether(best, _f1, _f2);
+    if (isSpecialDay()) {
+      ensureTogether(best, _f1, _f2);
+      ensureWithAny(best, _g1, _g2, [_f1, _f2]);
+    }
     return best;
   }
 
