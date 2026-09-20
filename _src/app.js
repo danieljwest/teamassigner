@@ -4,7 +4,7 @@
   */
   const students = [
     "Adrian", "Brayden", "Calvin", "Caper", "Cassidy", "Eloise",
-    "Isaac", "L", "Leila", "Lena", "Lincoln", "Nicholas",
+    "Hugh", "Isaac", "L", "Leila", "Lena", "Lincoln", "Nicholas",
     "Norah", "Quincy", "Sawyer", "Tori", "Violet", "Vivian"
   ];
 
@@ -239,7 +239,7 @@
       if (_g2.some((name) => set.has(name))) partnerHere = true;
     }
     if (isSpecialDay() && sawA && sawB && !paired) score += 10000;
-    if (isSpecialDay() && sawG && partnerHere && !withPartner) score += 10000;
+    if (sawG && partnerHere && !withPartner) score += 10000;
     return score;
   }
 
@@ -254,10 +254,8 @@
         bestScore = score;
       }
     }
-    if (isSpecialDay()) {
-      ensureTogether(best, _f1, _f2);
-      ensureWithAny(best, _g1, _g2, [_f1, _f2]);
-    }
+    if (isSpecialDay()) ensureTogether(best, _f1, _f2);
+    ensureWithAny(best, _g1, _g2, [_f1, _f2]);
     return best;
   }
 
