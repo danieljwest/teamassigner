@@ -51,7 +51,7 @@
   const rosterMsgEl = document.getElementById("rosterMsg");
   const newStudentEl = document.getElementById("newStudent");
   const teamsEl = document.getElementById("teams");
-  const resultHint = document.getElementById("resultHint");
+  const resetBtn = document.getElementById("reset");
   const arena = document.getElementById("arena");
   const flash = document.getElementById("flash");
   const flashCopy = document.getElementById("flashCopy");
@@ -376,13 +376,23 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  function showBoard() {
+    document.body.classList.add("showing-results");
+    window.scrollTo(0, 0);
+  }
+
+  function hideBoard() {
+    document.body.classList.remove("showing-results");
+    teamsEl.innerHTML = "";
+  }
+
   async function animateShuffle(names, groups) {
     flash.classList.add("active");
     arena.classList.add("active");
     flashCopy.textContent = "Mixing it up";
     arena.innerHTML = "";
+    showBoard();
     teamsEl.innerHTML = groups.map(teamCard).join("");
-    document.getElementById("teams").scrollIntoView({ behavior: "smooth", block: "center" });
 
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight * 0.48;
@@ -462,16 +472,19 @@
     }
     showError("");
     shuffleBtn.disabled = true;
-    resultHint.textContent = "Shuffling…";
     if (beep.ctx && beep.ctx.state === "suspended") beep.ctx.resume();
     beep(180, 0.08);
     try {
       const groups = assignTeams(names, minSize);
       await animateShuffle(names, groups);
-      resultHint.textContent = `${groups.length} team${groups.length === 1 ? "" : "s"} from ${names.length} students.`;
     } finally {
       shuffleBtn.disabled = presentStudents().length < minSize;
     }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    hideBoard();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   renderStudents();

@@ -284,44 +284,94 @@
       font-weight: 700;
     }
 
-    .results {
-      min-height: 120px;
+    .board {
+      display: none;
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 20px clamp(16px, 3vw, 40px) 40px;
+      flex-direction: column;
+      gap: 18px;
     }
+
+    body.showing-results #setup { display: none; }
+    body.showing-results .board { display: flex; }
+
+    .board-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .board-bar h2 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      letter-spacing: -0.02em;
+    }
+
+    .reset {
+      appearance: none;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font: inherit;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .reset:hover { background: rgba(255,255,255,0.14); }
+    .reset:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
     .teams {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: clamp(12px, 2vw, 22px);
+      align-content: start;
+      flex: 1;
     }
 
     .team {
-      border-radius: 24px;
-      padding: 16px;
-      background: rgba(8, 10, 22, 0.65);
-      border: 1px solid var(--stroke);
+      border-radius: 28px;
+      padding: clamp(16px, 2.5vw, 28px);
+      background: rgba(8, 10, 22, 0.72);
+      border: 2px solid color-mix(in srgb, var(--team, var(--cyan)) 55%, transparent);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 18px 40px rgba(0,0,0,0.28);
       transform: translateY(18px);
       opacity: 0;
       animation: popIn 0.45s cubic-bezier(.2,1.4,.3,1) forwards;
     }
 
     .team h3 {
-      margin: 0 0 12px;
-      font-size: 13px;
-      letter-spacing: 0.18em;
+      margin: 0 0 clamp(14px, 2vw, 22px);
+      font-size: clamp(18px, 2.4vw, 28px);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--team, var(--cyan));
     }
 
     .member {
-      background: rgba(255,255,255,0.06);
-      border-radius: 14px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 18px;
+      padding: clamp(14px, 2vw, 22px) clamp(16px, 2.2vw, 24px);
+      margin-bottom: clamp(10px, 1.4vw, 14px);
       font-weight: 800;
+      font-size: clamp(28px, 4.6vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
-      gap: 8px;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      gap: 14px;
+      transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+    }
+
+    .member .dot {
+      width: clamp(14px, 1.8vw, 22px);
+      height: clamp(14px, 1.8vw, 22px);
     }
 
     .member.waiting {
@@ -332,6 +382,16 @@
     .member.waiting .dot { opacity: 0; }
 
     .member:last-child { margin-bottom: 0; }
+
+    @media (max-width: 720px) {
+      .teams {
+        grid-template-columns: 1fr;
+      }
+
+      .member {
+        font-size: clamp(32px, 9vw, 48px);
+      }
+    }
 
     .arena {
       position: fixed;

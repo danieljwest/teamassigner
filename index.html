@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="setup">
     <header>
       <div class="kicker">Classroom mixer</div>
       <h1>Team Shuffle</h1>
@@ -45,15 +45,15 @@
       </div>
       <div class="error" id="error"></div>
     </section>
-
-    <section class="panel results">
-      <div class="panel-head">
-        <h2>Today’s teams</h2>
-        <p class="hint" id="resultHint">Ready when you are.</p>
-      </div>
-      <div class="teams" id="teams"></div>
-    </section>
   </div>
+
+  <section class="board" id="board" aria-live="polite">
+    <div class="board-bar">
+      <h2>Today’s teams</h2>
+      <button type="button" class="reset" id="reset">Shuffle again</button>
+    </div>
+    <div class="teams" id="teams"></div>
+  </section>
 
   <div class="flash" id="flash">
     <div class="vortex"></div>
