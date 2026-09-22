@@ -243,18 +243,48 @@
     return score;
   }
 
+  function attachOverflow(groups, person, preferWith) {
+    if (!groups.length) return groups;
+    if (preferWith) {
+      const preferred = groups.find((group) => group.includes(preferWith));
+      if (preferred) {
+        preferred.push(person);
+        return groups;
+      }
+    }
+    let target = groups[0];
+    for (const group of groups) {
+      if (group.length < target.length) target = group;
+    }
+    target.push(person);
+    return groups;
+  }
+
   function assignTeams(names, size) {
-    let best = partition(names, size);
+    const overflow = names.includes(_f1) ? _f1 : null;
+    const pool = overflow ? names.filter((name) => name !== overflow) : names;
+    if (!pool.length) return overflow ? [[overflow]] : [];
+    if (pool.length < size) {
+      const only = [shuffle(pool)];
+      if (overflow) only[0].push(overflow);
+      return only;
+    }
+
+    let best = partition(pool, size);
     let bestScore = scoreGroups(best);
     for (let i = 0; i < 1200 && bestScore > 0; i++) {
-      const candidate = partition(names, size);
+      const candidate = partition(pool, size);
       const score = scoreGroups(candidate);
       if (score < bestScore) {
         best = candidate;
         bestScore = score;
       }
     }
-    if (isSpecialDay()) ensureTogether(best, _f1, _f2);
+
+    if (overflow) {
+      const preferWith = isSpecialDay() ? _f2 : null;
+      attachOverflow(best, overflow, preferWith);
+    }
     ensureWithAny(best, _g1, _g2, [_f1, _f2]);
     return best;
   }
