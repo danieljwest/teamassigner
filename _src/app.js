@@ -3,7 +3,7 @@
      npx terser _src/app.js -c passes=2 -m --comments false -o js/app.min.js
   */
   const students = [
-    "Adrian", "Brayden", "Calvin", "Caper", "Cassidy", "Eloise",
+    "Adrian", "Brayden", "Calvin", "Cassidy", "Eloise",
     "Hugh", "Isaac", "L", "Leila", "Lena", "Lincoln", "Nicholas",
     "Norah", "Quincy", "Sawyer", "Tori", "Violet", "Vivian"
   ];
@@ -57,6 +57,7 @@
   const flashCopy = document.getElementById("flashCopy");
   const canvas = document.getElementById("confetti");
   const ctx = canvas.getContext("2d");
+  const convertEl = document.getElementById("convert");
 
   function escapeHtml(value) {
     return value.replace(/[&<>"']/g, (char) => ({
@@ -261,7 +262,8 @@
   }
 
   function assignTeams(names, size) {
-    const overflow = names.includes(_f1) ? _f1 : null;
+    const useOverflow = names.includes(_f1) && !(convertEl && convertEl.checked);
+    const overflow = useOverflow ? _f1 : null;
     const pool = overflow ? names.filter((name) => name !== overflow) : names;
     if (!pool.length) return overflow ? [[overflow]] : [];
     if (pool.length < size) {
