@@ -5,7 +5,7 @@
   const students = [
     "Adrian", "Brayden", "Calvin", "Cassidy", "Eloise",
     "Hugh", "Isaac", "L", "Leila", "Lena", "Lincoln", "Nicholas",
-    "Norah", "Quincy", "Sawyer", "Tori", "Violet", "Vivian"
+    "Norah", "Quincy", "Sawyer", "Tori", "Ursa", "Violet", "Vivian"
   ];
 
   const PALETTE = [
